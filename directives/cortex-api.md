@@ -61,6 +61,10 @@ All endpoints (except `/health*`) require:
 | GET | /contacts | List/search contacts |
 | GET | /usage/summary | Token usage summary |
 | GET | /usage/budget-check/:agent | Budget check |
+| GET | /errors/summary | Error summary (self-annealing) |
+| GET | /errors/recent | Recent errors list |
+| GET | /errors/patterns | Recurring error patterns |
+| PATCH | /errors/resolve | Resolve errors by pattern/ID |
 
 ## Background Jobs
 
@@ -69,6 +73,35 @@ Scheduled via node-cron (in-process):
 - **Stale context cleanup** — Every 6h, removes context for inactive contacts
 - **Token budget reset** — Midnight, logs daily usage summary
 - **Handoff reminder** — Every 2h, logs warnings for overdue pending handoffs
+- **Self-annealing** — Every 4h, detects error patterns, auto-fixes recurring issues, checks quality, updates directive
+
+## Self-Annealing System
+
+The self-annealing system automatically detects and responds to operational issues:
+
+1. **Error Journal** — All errors are logged to `cortex_errors` table with type, service, operation, and context
+2. **Pattern Detection** — The self-anneal job groups errors by type/service/operation to find recurring patterns
+3. **Auto-Fixes** — Rate limits → batch size recommendations; budget exceeded → budget increase suggestions; quality issues → Sonnet fallback recommendations
+4. **Quality Checks** — Samples recent summaries for empty/short outputs, checks context staleness, detects orphaned handoffs
+5. **Directive Updates** — Appends learnings to this file's "Learnings & Edge Cases" section automatically
+
+Error tracking is wired into: error handler middleware, interaction service (Claude failures), context service (generation failures), and budget guard (budget exceeded).
+
+## Dashboard
+
+The dashboard is a Next.js 14 app in `/dashboard` with Tailwind CSS and Recharts:
+
+| Route | Page | Description |
+|-------|------|-------------|
+| `/` | Overview | KPI cards, recent activity, pending handoffs |
+| `/contacts` | Contacts | Searchable/filterable table, click for detail |
+| `/contacts/[id]` | Contact Detail | Working context, interaction timeline, handoff history |
+| `/handoffs` | Handoffs | Pending queue with status filters and stats |
+| `/usage` | Usage | Token spend charts by agent/model/day, budget bars |
+| `/activity` | Activity | Auto-refreshing feed of interactions + handoffs |
+| `/errors` | Errors | Self-annealing dashboard: patterns, auto-fixes, error list |
+
+Run with: `cd dashboard && npm install && npm run dev` (port 3001)
 
 ## Learnings & Edge Cases
 

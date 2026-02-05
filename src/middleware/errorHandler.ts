@@ -1,7 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import { ZodError } from 'zod';
+import * as errorService from '../services/errorService.js';
 
-export function errorHandler(err: Error, _req: Request, res: Response, _next: NextFunction): void {
+export function errorHandler(err: Error, req: Request, res: Response, _next: NextFunction): void {
   console.error('[Cortex Error]', err);
 
   if (err instanceof ZodError) {
@@ -21,6 +22,21 @@ export function errorHandler(err: Error, _req: Request, res: Response, _next: Ne
     });
     return;
   }
+
+  // Log unhandled errors to the error journal for self-annealing
+  errorService.logError({
+    tenant_id: req.tenantId || undefined,
+    error_type: 'api_error',
+    service: 'middleware',
+    operation: `${req.method} ${req.path}`,
+    error_message: err.message,
+    stack_trace: err.stack,
+    context: {
+      agent: req.agentName,
+      method: req.method,
+      path: req.path,
+    },
+  });
 
   res.status(500).json({
     error: 'Internal server error',

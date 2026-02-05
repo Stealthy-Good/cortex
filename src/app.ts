@@ -9,6 +9,7 @@ import interactionRoutes from './routes/interactions.js';
 import contextRoutes from './routes/context.js';
 import handoffRoutes from './routes/handoffs.js';
 import usageRoutes from './routes/usage.js';
+import errorRoutes from './routes/errors.js';
 
 const app = express();
 
@@ -26,6 +27,7 @@ app.use('/api/v1', interactionRoutes);
 app.use('/api/v1', contextRoutes);
 app.use('/api/v1', handoffRoutes);
 app.use('/api/v1', usageRoutes);
+app.use('/api/v1', errorRoutes);
 
 // Error handling
 app.use(errorHandler);

@@ -1,6 +1,7 @@
 import { supabase } from '../db.js';
 import * as claudeService from './claudeService.js';
 import * as usageService from './usageService.js';
+import * as errorService from './errorService.js';
 import type { Interaction } from '../types/index.js';
 
 export interface CreateInteractionInput {
@@ -54,6 +55,16 @@ export async function createInteraction(
       tokenCount = usage.input_tokens + usage.output_tokens;
     } catch (err) {
       console.error('[Interaction] Failed to auto-summarize:', err);
+      errorService.logError({
+        tenant_id: tenantId,
+        error_type: 'claude_error',
+        service: 'interactionService',
+        operation: 'summarize_interaction',
+        error_message: (err as Error).message,
+        stack_trace: (err as Error).stack,
+        pattern_id: (err as Error).message.includes('rate_limit') ? 'claude_rate_limit' : undefined,
+        context: { contact_id: input.contact_id, agent: input.agent, type: input.type },
+      });
       // Proceed without summary
     }
   }

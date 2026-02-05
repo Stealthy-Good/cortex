@@ -226,6 +226,22 @@ export interface ClaudeContextResult {
   recommended_tone: string;
 }
 
+export interface CortexError {
+  id: string;
+  tenant_id: string | null;
+  error_type: string;
+  service: string;
+  operation: string;
+  error_message: string;
+  stack_trace: string | null;
+  context: Record<string, unknown>;
+  resolution: string | null;
+  resolved_at: string | null;
+  pattern_id: string | null;
+  auto_fixed: boolean;
+  created_at: string;
+}
+
 // Valid agent names
 export const VALID_AGENTS = ['luna', 'mia', 'anna', 'jasper', 'helios', 'human'] as const;
 export type AgentName = typeof VALID_AGENTS[number];

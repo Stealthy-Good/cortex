@@ -1,6 +1,7 @@
 import { supabase } from '../db.js';
 import * as claudeService from './claudeService.js';
 import * as usageService from './usageService.js';
+import * as errorService from './errorService.js';
 import type { Contact, ContactContext, Interaction, ContextResponse } from '../types/index.js';
 
 const STALENESS_HOURS = 24;
@@ -202,7 +203,26 @@ async function regenerateContext(
   const interactions = (recentInteractions || []) as Interaction[];
 
   // Generate context via Claude
-  const { result, usage } = await claudeService.generateWorkingContext(contact, interactions);
+  let result: { summary: string; key_facts: string[]; current_status: string; recommended_tone: string };
+  let usage: { model: string; input_tokens: number; output_tokens: number; cost_usd: number };
+
+  try {
+    const claudeResult = await claudeService.generateWorkingContext(contact, interactions);
+    result = claudeResult.result;
+    usage = claudeResult.usage;
+  } catch (err) {
+    errorService.logError({
+      tenant_id: tenantId,
+      error_type: 'claude_error',
+      service: 'contextService',
+      operation: 'generate_context',
+      error_message: (err as Error).message,
+      stack_trace: (err as Error).stack,
+      pattern_id: (err as Error).message.includes('rate_limit') ? 'claude_rate_limit' : undefined,
+      context: { contact_id: contactId },
+    });
+    throw err;
+  }
 
   const now = new Date().toISOString();
   const tokenCount = usage.input_tokens + usage.output_tokens;

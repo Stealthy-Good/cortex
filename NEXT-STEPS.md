@@ -75,7 +75,7 @@ curl http://localhost:3000/api/v1/usage/budget-check/anna \
 
 ---
 
-## Phase 2: Cortex Dashboard UI
+## Phase 2: Cortex Dashboard UI [COMPLETE]
 
 A lightweight web dashboard so you can see Cortex working in real-time. Ship fast, iterate later.
 
@@ -189,7 +189,7 @@ CRON_SECRET          # Vercel cron auth
 
 ---
 
-## Phase 4: Self-Annealing Process
+## Phase 4: Self-Annealing Process [COMPLETE]
 
 Cortex should get smarter over time. When something breaks or underperforms, it should fix itself and update its own instructions.
 
@@ -362,11 +362,11 @@ class CortexClient {
 ## Immediate TODO (Right Now)
 
 1. [x] Build Cortex API
-2. [ ] Set up Supabase + run migrations
+2. [ ] Set up Supabase + run migrations (includes 009_cortex_errors.sql)
 3. [ ] Smoke test locally
-4. [ ] Initialize git + push to GitHub
+4. [x] Initialize git + push to GitHub
 5. [ ] Set up Vercel project
 6. [ ] Deploy to cortex.stealthygood.com
-7. [ ] Build dashboard UI
-8. [ ] Implement self-annealing job
+7. [x] Build dashboard UI (Next.js 14 + Tailwind + Recharts in /dashboard)
+8. [x] Implement self-annealing system (error journal, self-anneal job, error tracking in services/middleware)
 9. [ ] Integrate first agent (Luna)
