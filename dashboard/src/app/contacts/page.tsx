@@ -1,31 +1,39 @@
-import { supabase } from '@/lib/supabase';
+import { supabase, supabaseReady } from '@/lib/supabase';
 import { formatDate, stageBadgeColor } from '@/lib/utils';
 import Link from 'next/link';
 
 export const revalidate = 30;
+export const dynamic = 'force-dynamic';
 
 interface ContactsPageProps {
   searchParams: { search?: string; stage?: string };
 }
 
 async function getContacts(search?: string, stage?: string) {
-  let query = supabase
-    .from('contacts')
-    .select('id, email, name, company_name, stage, owner_agent, last_touch_at, tags, created_at')
-    .order('last_touch_at', { ascending: false, nullsFirst: false })
-    .limit(50);
+  if (!supabaseReady) return [];
 
-  if (stage) {
-    query = query.eq('stage', stage);
+  try {
+    let query = supabase
+      .from('contacts')
+      .select('id, email, name, company_name, stage, owner_agent, last_touch_at, tags, created_at')
+      .order('last_touch_at', { ascending: false, nullsFirst: false })
+      .limit(50);
+
+    if (stage) {
+      query = query.eq('stage', stage);
+    }
+
+    if (search) {
+      query = query.or(`name.ilike.%${search}%,email.ilike.%${search}%,company_name.ilike.%${search}%`);
+    }
+
+    const { data, error } = await query;
+    if (error) console.error('Error fetching contacts:', error);
+    return data || [];
+  } catch (err) {
+    console.error('[Dashboard] Failed to fetch contacts:', err);
+    return [];
   }
-
-  if (search) {
-    query = query.or(`name.ilike.%${search}%,email.ilike.%${search}%,company_name.ilike.%${search}%`);
-  }
-
-  const { data, error } = await query;
-  if (error) console.error('Error fetching contacts:', error);
-  return data || [];
 }
 
 const STAGES = ['prospect', 'lead', 'opportunity', 'customer', 'churned'];

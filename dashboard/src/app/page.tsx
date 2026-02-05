@@ -1,46 +1,65 @@
-import { supabase } from '@/lib/supabase';
+import { supabase, supabaseReady } from '@/lib/supabase';
 import { formatTokens, formatCost, timeAgo } from '@/lib/utils';
 import KpiCard from '@/components/KpiCard';
 import Link from 'next/link';
 
 export const revalidate = 30;
+export const dynamic = 'force-dynamic';
+
+const EMPTY_DATA = {
+  activeContacts: 0,
+  todayInteractions: 0,
+  pendingHandoffs: [] as any[],
+  totalTokens: 0,
+  totalCost: 0,
+  recentInteractions: [] as any[],
+  recentHandoffs: [] as any[],
+  unresolvedErrors: 0,
+};
 
 async function getOverviewData() {
-  const now = new Date();
-  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
-  const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
+  if (!supabaseReady) return EMPTY_DATA;
 
-  const [
-    { count: activeContacts },
-    { count: todayInteractions },
-    { data: pendingHandoffs },
-    { data: todayUsage },
-    { data: recentInteractions },
-    { data: recentHandoffs },
-    { data: unresolvedErrors },
-  ] = await Promise.all([
-    supabase.from('contacts').select('id', { count: 'exact', head: true }).gte('last_touch_at', weekAgo),
-    supabase.from('interactions').select('id', { count: 'exact', head: true }).gte('created_at', todayStart),
-    supabase.from('handoff_events').select('id, from_agent, to_agent, urgency, reason, created_at').eq('status', 'pending').order('created_at', { ascending: false }).limit(5),
-    supabase.from('token_usage').select('input_tokens, output_tokens, cost_usd').gte('created_at', todayStart),
-    supabase.from('interactions').select('id, agent, type, summary, sentiment, created_at, contact_id').order('created_at', { ascending: false }).limit(8),
-    supabase.from('handoff_events').select('id, from_agent, to_agent, status, urgency, reason, created_at').order('created_at', { ascending: false }).limit(5),
-    supabase.from('cortex_errors').select('id', { count: 'exact', head: true }).is('resolved_at', null),
-  ]);
+  try {
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+    const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
 
-  const totalTokens = (todayUsage || []).reduce((sum, r) => sum + (r.input_tokens || 0) + (r.output_tokens || 0), 0);
-  const totalCost = (todayUsage || []).reduce((sum, r) => sum + (Number(r.cost_usd) || 0), 0);
+    const [
+      { count: activeContacts },
+      { count: todayInteractions },
+      { data: pendingHandoffs },
+      { data: todayUsage },
+      { data: recentInteractions },
+      { data: recentHandoffs },
+      { data: unresolvedErrors },
+    ] = await Promise.all([
+      supabase.from('contacts').select('id', { count: 'exact', head: true }).gte('last_touch_at', weekAgo),
+      supabase.from('interactions').select('id', { count: 'exact', head: true }).gte('created_at', todayStart),
+      supabase.from('handoff_events').select('id, from_agent, to_agent, urgency, reason, created_at').eq('status', 'pending').order('created_at', { ascending: false }).limit(5),
+      supabase.from('token_usage').select('input_tokens, output_tokens, cost_usd').gte('created_at', todayStart),
+      supabase.from('interactions').select('id, agent, type, summary, sentiment, created_at, contact_id').order('created_at', { ascending: false }).limit(8),
+      supabase.from('handoff_events').select('id, from_agent, to_agent, status, urgency, reason, created_at').order('created_at', { ascending: false }).limit(5),
+      supabase.from('cortex_errors').select('id', { count: 'exact', head: true }).is('resolved_at', null),
+    ]);
 
-  return {
-    activeContacts: activeContacts || 0,
-    todayInteractions: todayInteractions || 0,
-    pendingHandoffs: pendingHandoffs || [],
-    totalTokens,
-    totalCost,
-    recentInteractions: recentInteractions || [],
-    recentHandoffs: recentHandoffs || [],
-    unresolvedErrors: unresolvedErrors || 0,
-  };
+    const totalTokens = (todayUsage || []).reduce((sum, r) => sum + (r.input_tokens || 0) + (r.output_tokens || 0), 0);
+    const totalCost = (todayUsage || []).reduce((sum, r) => sum + (Number(r.cost_usd) || 0), 0);
+
+    return {
+      activeContacts: activeContacts || 0,
+      todayInteractions: todayInteractions || 0,
+      pendingHandoffs: pendingHandoffs || [],
+      totalTokens,
+      totalCost,
+      recentInteractions: recentInteractions || [],
+      recentHandoffs: recentHandoffs || [],
+      unresolvedErrors: unresolvedErrors || 0,
+    };
+  } catch (err) {
+    console.error('[Dashboard] Failed to fetch overview data:', err);
+    return EMPTY_DATA;
+  }
 }
 
 export default async function OverviewPage() {
@@ -52,6 +71,16 @@ export default async function OverviewPage() {
         <h1 className="text-2xl font-bold text-gray-900">Overview</h1>
         <p className="text-sm text-gray-500 mt-1">Cortex shared memory service dashboard</p>
       </div>
+
+      {!supabaseReady && (
+        <div className="rounded-xl border border-yellow-200 bg-yellow-50 p-4">
+          <p className="text-sm font-medium text-yellow-800">Supabase not configured</p>
+          <p className="text-xs text-yellow-700 mt-0.5">
+            Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in dashboard/.env.local to connect to your database.
+            Showing empty state preview.
+          </p>
+        </div>
+      )}
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">

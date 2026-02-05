@@ -1,47 +1,64 @@
-import { supabase } from '@/lib/supabase';
+import { supabase, supabaseReady } from '@/lib/supabase';
 import { formatDateTime, urgencyBadgeColor, statusBadgeColor, timeAgo } from '@/lib/utils';
 import Link from 'next/link';
 
 export const revalidate = 15;
+export const dynamic = 'force-dynamic';
 
 interface HandoffsPageProps {
   searchParams: { status?: string };
 }
 
+const EMPTY_STATS = { pending: 0, accepted: 0, completed: 0, rejected: 0 };
+
 async function getHandoffs(statusFilter?: string) {
-  let query = supabase
-    .from('handoff_events')
-    .select(`
-      id, from_agent, to_agent, to_human_id, reason, reason_detail,
-      context_summary, suggested_action, urgency, status,
-      accepted_at, completed_at, contact_id, created_at
-    `)
-    .order('created_at', { ascending: false })
-    .limit(50);
+  if (!supabaseReady) return [];
 
-  if (statusFilter) {
-    query = query.eq('status', statusFilter);
+  try {
+    let query = supabase
+      .from('handoff_events')
+      .select(`
+        id, from_agent, to_agent, to_human_id, reason, reason_detail,
+        context_summary, suggested_action, urgency, status,
+        accepted_at, completed_at, contact_id, created_at
+      `)
+      .order('created_at', { ascending: false })
+      .limit(50);
+
+    if (statusFilter) {
+      query = query.eq('status', statusFilter);
+    }
+
+    const { data, error } = await query;
+    if (error) console.error('Error fetching handoffs:', error);
+    return data || [];
+  } catch (err) {
+    console.error('[Dashboard] Failed to fetch handoffs:', err);
+    return [];
   }
-
-  const { data, error } = await query;
-  if (error) console.error('Error fetching handoffs:', error);
-  return data || [];
 }
 
 async function getHandoffStats() {
-  const [
-    { count: pending },
-    { count: accepted },
-    { count: completed },
-    { count: rejected },
-  ] = await Promise.all([
-    supabase.from('handoff_events').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
-    supabase.from('handoff_events').select('id', { count: 'exact', head: true }).eq('status', 'accepted'),
-    supabase.from('handoff_events').select('id', { count: 'exact', head: true }).eq('status', 'completed'),
-    supabase.from('handoff_events').select('id', { count: 'exact', head: true }).eq('status', 'rejected'),
-  ]);
+  if (!supabaseReady) return EMPTY_STATS;
 
-  return { pending: pending || 0, accepted: accepted || 0, completed: completed || 0, rejected: rejected || 0 };
+  try {
+    const [
+      { count: pending },
+      { count: accepted },
+      { count: completed },
+      { count: rejected },
+    ] = await Promise.all([
+      supabase.from('handoff_events').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
+      supabase.from('handoff_events').select('id', { count: 'exact', head: true }).eq('status', 'accepted'),
+      supabase.from('handoff_events').select('id', { count: 'exact', head: true }).eq('status', 'completed'),
+      supabase.from('handoff_events').select('id', { count: 'exact', head: true }).eq('status', 'rejected'),
+    ]);
+
+    return { pending: pending || 0, accepted: accepted || 0, completed: completed || 0, rejected: rejected || 0 };
+  } catch (err) {
+    console.error('[Dashboard] Failed to fetch handoff stats:', err);
+    return EMPTY_STATS;
+  }
 }
 
 const STATUSES = ['pending', 'accepted', 'completed', 'rejected'];

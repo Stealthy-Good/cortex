@@ -1,31 +1,45 @@
-import { supabase } from '@/lib/supabase';
+import { supabase, supabaseReady } from '@/lib/supabase';
 import { formatDateTime, timeAgo } from '@/lib/utils';
 import KpiCard from '@/components/KpiCard';
 
 export const revalidate = 30;
+export const dynamic = 'force-dynamic';
+
+const EMPTY_ERROR_DATA = {
+  errors: [] as any[],
+  total: 0,
+  unresolved: 0,
+  autoFixed: 0,
+  byType: {} as Record<string, number>,
+  byService: {} as Record<string, number>,
+  recurringPatterns: [] as any[],
+};
 
 async function getErrorData() {
-  const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  if (!supabaseReady) return EMPTY_ERROR_DATA;
 
-  const [
-    { data: recentErrors },
-    { count: totalErrors },
-    { count: unresolvedCount },
-    { count: autoFixedCount },
-  ] = await Promise.all([
-    supabase
-      .from('cortex_errors')
-      .select('*')
-      .gte('created_at', twentyFourHoursAgo)
-      .order('created_at', { ascending: false })
-      .limit(50),
-    supabase.from('cortex_errors').select('id', { count: 'exact', head: true }).gte('created_at', twentyFourHoursAgo),
-    supabase.from('cortex_errors').select('id', { count: 'exact', head: true }).is('resolved_at', null),
-    supabase.from('cortex_errors').select('id', { count: 'exact', head: true }).eq('auto_fixed', true).gte('created_at', twentyFourHoursAgo),
-  ]);
+  try {
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 
-  // Group errors by type for patterns
-  const errors = recentErrors || [];
+    const [
+      { data: recentErrors },
+      { count: totalErrors },
+      { count: unresolvedCount },
+      { count: autoFixedCount },
+    ] = await Promise.all([
+      supabase
+        .from('cortex_errors')
+        .select('*')
+        .gte('created_at', twentyFourHoursAgo)
+        .order('created_at', { ascending: false })
+        .limit(50),
+      supabase.from('cortex_errors').select('id', { count: 'exact', head: true }).gte('created_at', twentyFourHoursAgo),
+      supabase.from('cortex_errors').select('id', { count: 'exact', head: true }).is('resolved_at', null),
+      supabase.from('cortex_errors').select('id', { count: 'exact', head: true }).eq('auto_fixed', true).gte('created_at', twentyFourHoursAgo),
+    ]);
+
+    // Group errors by type for patterns
+    const errors = recentErrors || [];
   const byType: Record<string, number> = {};
   const byService: Record<string, number> = {};
 
@@ -65,6 +79,10 @@ async function getErrorData() {
     byService,
     recurringPatterns,
   };
+  } catch (err) {
+    console.error('[Dashboard] Failed to fetch error data:', err);
+    return EMPTY_ERROR_DATA;
+  }
 }
 
 const ERROR_TYPE_COLORS: Record<string, string> = {

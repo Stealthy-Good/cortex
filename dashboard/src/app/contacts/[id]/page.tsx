@@ -1,15 +1,19 @@
-import { supabase } from '@/lib/supabase';
+import { supabase, supabaseReady } from '@/lib/supabase';
 import { formatDate, formatDateTime, stageBadgeColor, sentimentBadgeColor, timeAgo } from '@/lib/utils';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
 export const revalidate = 15;
+export const dynamic = 'force-dynamic';
 
 interface ContactDetailProps {
   params: { id: string };
 }
 
 async function getContactDetail(id: string) {
+  if (!supabaseReady) return { contact: null, interactions: [], context: null, handoffs: [] };
+
+  try {
   const [
     { data: contact },
     { data: interactions },
@@ -23,6 +27,10 @@ async function getContactDetail(id: string) {
   ]);
 
   return { contact, interactions: interactions || [], context, handoffs: handoffs || [] };
+  } catch (err) {
+    console.error('[Dashboard] Failed to fetch contact detail:', err);
+    return { contact: null, interactions: [], context: null, handoffs: [] };
+  }
 }
 
 export default async function ContactDetailPage({ params }: ContactDetailProps) {
