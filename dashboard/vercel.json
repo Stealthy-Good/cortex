@@ -1,10 +1,5 @@
 {
   "framework": "nextjs",
   "buildCommand": "npm run build",
-  "installCommand": "npm install",
-  "env": {
-    "NEXT_PUBLIC_CORTEX_API_URL": "@cortex-api-url",
-    "NEXT_PUBLIC_CORTEX_API_KEY": "@cortex-api-key",
-    "NEXT_PUBLIC_CORTEX_TENANT_ID": "@cortex-tenant-id"
-  }
+  "installCommand": "npm install"
 }
