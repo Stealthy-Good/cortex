@@ -19,4 +19,4 @@ CREATE TABLE IF NOT EXISTS token_usage (
 );
 
 CREATE INDEX IF NOT EXISTS idx_token_usage_tenant_agent ON token_usage(tenant_id, agent, created_at DESC);
-CREATE INDEX IF NOT EXISTS idx_token_usage_daily ON token_usage(tenant_id, (created_at::date));
+CREATE INDEX IF NOT EXISTS idx_token_usage_daily ON token_usage(tenant_id, ((created_at AT TIME ZONE 'UTC')::date));
