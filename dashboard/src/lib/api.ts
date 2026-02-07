@@ -1,6 +1,5 @@
-const API_BASE = process.env.NEXT_PUBLIC_CORTEX_API_URL || "http://localhost:3000";
-const API_KEY = process.env.NEXT_PUBLIC_CORTEX_API_KEY || "";
-const TENANT_ID = process.env.NEXT_PUBLIC_CORTEX_TENANT_ID || "";
+// All requests go through /api/cortex proxy route — API key stays server-side
+const PROXY_BASE = "/api/cortex";
 
 interface FetchOptions extends RequestInit {
   agent?: string;
@@ -11,13 +10,13 @@ async function cortexFetch(path: string, options: FetchOptions = {}) {
 
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
-    Authorization: `Bearer ${API_KEY}`,
-    "X-Tenant-ID": TENANT_ID,
     ...(agent ? { "X-Agent-Name": agent } : {}),
     ...(fetchOptions.headers as Record<string, string> || {}),
   };
 
-  const res = await fetch(`${API_BASE}${path}`, {
+  const url = `${PROXY_BASE}?path=${encodeURIComponent(path)}`;
+
+  const res = await fetch(url, {
     ...fetchOptions,
     headers,
   });
