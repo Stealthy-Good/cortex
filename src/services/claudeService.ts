@@ -1,4 +1,4 @@
-import Anthropic from '@anthropic-ai/sdk';
+import { Anthropic } from '@anthropic-ai/sdk';
 import { config } from '../config.js';
 import type { Contact, Interaction, ClaudeSummaryResult, ClaudeContextResult } from '../types/index.js';
 
