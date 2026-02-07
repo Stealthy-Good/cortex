@@ -2,11 +2,14 @@ import Anthropic from '@anthropic-ai/sdk';
 import { config } from '../config.js';
 import type { Contact, Interaction, ClaudeSummaryResult, ClaudeContextResult } from '../types/index.js';
 
-let client: Anthropic | null = null;
+// Cast to work around TS 5.9 treating the SDK default export as a non-constructable namespace
+const AnthropicClient: new (opts: { apiKey: string }) => any = Anthropic as any;
 
-function getClient(): Anthropic {
+let client: any = null;
+
+function getClient() {
   if (!client) {
-    client = new Anthropic({ apiKey: config.anthropic.apiKey });
+    client = new AnthropicClient({ apiKey: config.anthropic.apiKey });
   }
   return client;
 }
