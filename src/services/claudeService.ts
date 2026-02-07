@@ -2,9 +2,11 @@ import Anthropic from '@anthropic-ai/sdk';
 import { config } from '../config.js';
 import type { Contact, Interaction, ClaudeSummaryResult, ClaudeContextResult } from '../types/index.js';
 
-let client: Anthropic | null = null;
+type AnthropicClient = InstanceType<typeof Anthropic>;
 
-function getClient(): Anthropic {
+let client: AnthropicClient | null = null;
+
+function getClient(): AnthropicClient {
   if (!client) {
     client = new Anthropic({ apiKey: config.anthropic.apiKey });
   }
