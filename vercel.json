@@ -1,0 +1,17 @@
+{
+  "version": 2,
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "rewrites": [
+    { "source": "/api/v1/(.*)", "destination": "/api" },
+    { "source": "/health/(.*)", "destination": "/api" },
+    { "source": "/health", "destination": "/api" },
+    { "source": "/api/jobs/(.*)", "destination": "/api/jobs/$1" }
+  ],
+  "crons": [
+    { "path": "/api/jobs/nightly-refresh", "schedule": "0 2 * * *" },
+    { "path": "/api/jobs/stale-cleanup", "schedule": "0 */6 * * *" },
+    { "path": "/api/jobs/budget-reset", "schedule": "0 0 * * *" },
+    { "path": "/api/jobs/handoff-reminder", "schedule": "0 */2 * * *" }
+  ]
+}
