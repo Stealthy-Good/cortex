@@ -1,7 +1,7 @@
 # Cortex: Production Roadmap
 
-> Last updated: 2026-02-02
-> Status: Core API complete, pre-production
+> Last updated: 2026-02-09
+> Status: API + Dashboard deployed to Vercel
 
 ---
 
@@ -362,11 +362,13 @@ class CortexClient {
 ## Immediate TODO (Right Now)
 
 1. [x] Build Cortex API
-2. [ ] Set up Supabase + run migrations
-3. [ ] Smoke test locally
-4. [ ] Initialize git + push to GitHub
-5. [ ] Set up Vercel project
-6. [ ] Deploy to cortex.stealthygood.com
-7. [ ] Build dashboard UI
-8. [ ] Implement self-annealing job
-9. [ ] Integrate first agent (Luna)
+2. [x] Set up Supabase + run migrations
+3. [x] Smoke test locally
+4. [x] Initialize git + push to GitHub
+5. [x] Set up Vercel projects (API + Dashboard)
+6. [x] Build dashboard UI (5 pages: Overview, Contacts, Handoffs, Usage, Activity)
+7. [x] Deploy API and Dashboard to Vercel
+8. [ ] Add custom domain (cortex.stealthygood.com)
+9. [ ] Add `ALLOWED_ORIGINS` env var to API project (dashboard URL)
+10. [ ] Implement self-annealing job (Phase 4)
+11. [ ] Integrate first agent — Luna (Phase 6)
