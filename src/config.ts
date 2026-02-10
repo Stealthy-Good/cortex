@@ -23,6 +23,7 @@ export function validateConfig(): void {
     ['SUPABASE_URL', config.supabase.url],
     ['SUPABASE_SERVICE_KEY', config.supabase.serviceKey],
     ['CORTEX_API_KEY', config.cortexApiKey],
+    ['ANTHROPIC_API_KEY', config.anthropic.apiKey],
   ];
 
   const missing = required.filter(([, value]) => !value).map(([name]) => name);
