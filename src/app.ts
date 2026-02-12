@@ -2,6 +2,7 @@ import express from 'express';
 import { authMiddleware } from './middleware/auth.js';
 import { tenantMiddleware } from './middleware/tenant.js';
 import { errorHandler } from './middleware/errorHandler.js';
+import { heliosTracker } from './middleware/heliosTracker.js';
 
 import healthRoutes from './routes/health.js';
 import contactRoutes from './routes/contacts.js';
@@ -14,6 +15,9 @@ const app = express();
 
 // Body parsing
 app.use(express.json({ limit: '1mb' }));
+
+// Helios request tracking
+app.use(heliosTracker);
 
 // Auth & tenant middleware (skipped for /health)
 app.use(authMiddleware);

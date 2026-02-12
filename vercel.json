@@ -12,6 +12,7 @@
     { "path": "/api/jobs/nightly-refresh", "schedule": "0 2 * * *" },
     { "path": "/api/jobs/stale-cleanup", "schedule": "0 */6 * * *" },
     { "path": "/api/jobs/budget-reset", "schedule": "0 0 * * *" },
-    { "path": "/api/jobs/handoff-reminder", "schedule": "0 */2 * * *" }
+    { "path": "/api/jobs/handoff-reminder", "schedule": "0 */2 * * *" },
+    { "path": "/api/jobs/report-helios", "schedule": "* * * * *" }
   ]
 }

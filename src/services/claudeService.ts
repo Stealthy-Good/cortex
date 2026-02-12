@@ -1,5 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { config } from '../config.js';
+import { reportCost } from '../lib/helios.js';
 import type { Contact, Interaction, ClaudeSummaryResult, ClaudeContextResult } from '../types/index.js';
 
 // Cast to work around TS 5.9 treating the SDK default export as a non-constructable namespace
@@ -79,6 +80,8 @@ Respond in JSON:
     cost_usd: calculateCost(response.usage.input_tokens, response.usage.output_tokens),
   };
 
+  reportCost({ ...usage, operation: 'summarize_interaction' }).catch(() => {});
+
   return { result, usage };
 }
 
@@ -136,6 +139,8 @@ Keep total output under 300 tokens. Be specific and actionable.`;
     output_tokens: response.usage.output_tokens,
     cost_usd: calculateCost(response.usage.input_tokens, response.usage.output_tokens),
   };
+
+  reportCost({ ...usage, operation: 'generate_context' }).catch(() => {});
 
   return { result, usage };
 }
@@ -196,6 +201,8 @@ Focus on actionable context for ${toAgent || 'the receiving party'}.`;
     output_tokens: response.usage.output_tokens,
     cost_usd: calculateCost(response.usage.input_tokens, response.usage.output_tokens),
   };
+
+  reportCost({ ...usage, operation: 'generate_handoff_context' }).catch(() => {});
 
   return { summary: text.trim(), usage };
 }

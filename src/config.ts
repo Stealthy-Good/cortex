@@ -1,4 +1,5 @@
 import dotenv from 'dotenv';
+dotenv.config({ path: '.env.local', override: true });
 dotenv.config();
 
 export const config = {
@@ -16,6 +17,11 @@ export const config = {
   cortexApiKey: process.env.CORTEX_API_KEY || '',
   defaultTenantId: process.env.DEFAULT_TENANT_ID || '',
   heliosWebhookUrl: process.env.HELIOS_WEBHOOK_URL || '',
+
+  helios: {
+    url: process.env.HELIOS_URL || '',
+    agentId: process.env.HELIOS_AGENT_ID || '',
+  },
 } as const;
 
 export function validateConfig(): void {

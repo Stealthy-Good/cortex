@@ -3,6 +3,7 @@ import { nightlyContextRefresh } from './nightlyContextRefresh.js';
 import { staleContextCleanup } from './staleContextCleanup.js';
 import { tokenBudgetReset } from './tokenBudgetReset.js';
 import { handoffReminder } from './handoffReminder.js';
+import { reportToHelios } from '../lib/helios.js';
 
 export function startJobs(): void {
   console.log('[Jobs] Scheduling background jobs...');
@@ -32,6 +33,13 @@ export function startJobs(): void {
   cron.schedule('0 */2 * * *', () => {
     handoffReminder().catch((err) => {
       console.error('[Jobs] handoffReminder failed:', err);
+    });
+  });
+
+  // Helios metrics reporting: every 60 seconds
+  cron.schedule('* * * * *', () => {
+    reportToHelios().catch((err) => {
+      console.error('[Jobs] reportToHelios failed:', err);
     });
   });
 
