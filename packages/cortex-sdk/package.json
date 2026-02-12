@@ -1,5 +1,5 @@
 {
-  "name": "@cortex/sdk",
+  "name": "@stealthy-good/cortex-sdk",
   "version": "0.1.0",
   "description": "TypeScript client for the Cortex shared memory API",
   "type": "module",
@@ -19,6 +19,14 @@
     "dist",
     "src"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Stealthy-Good/cortex.git",
+    "directory": "packages/cortex-sdk"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
   "devDependencies": {
     "typescript": "~5.7.0"
   }
